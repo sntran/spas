@@ -1,0 +1,4 @@
+{
+  "PORT": 7277,
+  "DATABASE_URL": "redis://rediscloud:lu7Dr5i1liLQJqtl@pub-redis-19564.us-east-1-3.3.ec2.garantiadata.com:19564"
+}
