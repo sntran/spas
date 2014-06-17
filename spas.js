@@ -53,7 +53,9 @@ var configs = require( './lib/config' );
 var winston = require( './lib/logging' ).winston;
 var CacheManager = require( './lib/cache' );
 var BundleManager = require( './lib/bundleManager' );
+var authenticator = require( './lib/auth' );
 var engine = require( './lib/engine' );
+var _ = require( 'lodash' );
 
 var koa = require( 'koa' );
 var path = require( 'path' );
@@ -83,10 +85,20 @@ var cacher = CacheManager( {
   storage: configs.get( 'DATABASE_URL' )
 } );
 
-app.get( '/bundle/:bid', bundler, cacher, engine.fulfill() ); // A bundle is being requested using the old, deprecated format 'http://domain.com/bundle/bundlename'
-app.get( '/:bid', bundler, cacher, engine.fulfill() ); // A bundle is being requested in the format 'http://domain.com/bundlename'
-app.get( '/', bundler, cacher, engine.fulfill() ); // A bundle is being requested in the format 'http://bundlename.domain.com'
+// Because authenticator is used after router, it's called after all other
+// middlewares of the route handler.
+app.use( authenticator( {
+  providers: configs.get( 'authentication' )
+} ) );
 
+// A bundle is being requested using the old, deprecated format 'http://domain.com/bundle/bundlename'
+app.get( '/bundle/:bid', bundler, cacher, engine.fulfill() );
+// A bundle is being requested in the format 'http://domain.com/bundlename'
+app.get( '/:bid', bundler, cacher, engine.fulfill() );
+// A bundle is being requested in the format 'http://bundlename.domain.com'
+app.get( '/', bundler, cacher, engine.fulfill() );
+
+// Start SPAS.
 app.listen( configs.get( 'PORT' ), function() {
   winston.info( 'SPAS is listening on port %d', configs.get( 'PORT' ) ) ;
 });
